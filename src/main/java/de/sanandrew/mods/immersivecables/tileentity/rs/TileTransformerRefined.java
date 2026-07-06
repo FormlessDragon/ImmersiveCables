@@ -60,7 +60,7 @@ public class TileTransformerRefined
     @Override
     public Vec3d getConnectionOffset(ImmersiveNetHandler.Connection con) {
         EnumFacing facing = this.getFacing();
-        return new Vec3d(0.5D + facing.getFrontOffsetX() * 0.4D, 0.5D + facing.getFrontOffsetY() * 0.4D, 0.5D + facing.getFrontOffsetZ() * 0.4D);
+        return new Vec3d(0.5D + facing.getXOffset() * 0.4D, 0.5D + facing.getYOffset() * 0.4D, 0.5D + facing.getZOffset() * 0.4D);
     }
 
     @Override

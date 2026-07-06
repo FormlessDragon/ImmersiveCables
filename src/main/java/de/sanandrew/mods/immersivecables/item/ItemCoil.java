@@ -41,19 +41,18 @@ public class ItemCoil
         implements IWireCoil
 {
     public ItemCoil() {
-        this.setUnlocalizedName(ICConstants.ID + ":wire_coil");
+        this.setTranslationKey(ICConstants.ID + ":wire_coil");
         this.setRegistryName(ICConstants.ID, "wire_coil");
         setHasSubtypes(true);
         setCreativeTab(ICCreativeTab.INSTANCE);
     }
 
     @Override
-    public String getUnlocalizedName(ItemStack stack) {
+    public String getTranslationKey(ItemStack stack) {
         int meta = Math.min(stack.getItemDamage(), Wires.VALUES.length - 1);
-        return getUnlocalizedName() + '.' + Wires.VALUES[meta].key;
+        return getTranslationKey() + '.' + Wires.VALUES[meta].key;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
         if( this.isInCreativeTab(tab) ) {
@@ -69,7 +68,7 @@ public class ItemCoil
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "deprecation"})
+    @SuppressWarnings("deprecation")
     public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltip, ITooltipFlag flagIn) {
         if( stack.getTagCompound() != null && stack.getTagCompound().hasKey("linkingPos") ) {
             int[] link = stack.getTagCompound().getIntArray("linkingPos");
@@ -143,7 +142,7 @@ public class ItemCoil
                                         ImmersiveNetHandler.Connection tmpConn = new ImmersiveNetHandler.Connection(Utils.toCC(nodeHere), Utils.toCC(nodeLink), wire,
                                                                                                                     (int) Math.sqrt(distanceSq));
                                         Vec3d start = nodeHere.getConnectionOffset(tmpConn, target, pos.subtract(masterPos));
-					Vec3d end = nodeLink.getConnectionOffset(tmpConn, targetLink, offsetLink).addVector(linkPos.getX()-masterPos.getX(),
+					Vec3d end = nodeLink.getConnectionOffset(tmpConn, targetLink, offsetLink).add(linkPos.getX()-masterPos.getX(),
 											linkPos.getY()-masterPos.getY(),
 											linkPos.getZ()-masterPos.getZ());
                                         boolean canSee = ApiUtils.raytraceAlongCatenaryRelative(tmpConn, (p) -> {

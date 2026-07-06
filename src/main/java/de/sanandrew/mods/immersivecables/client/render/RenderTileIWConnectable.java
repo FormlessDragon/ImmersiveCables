@@ -37,7 +37,7 @@ public class RenderTileIWConnectable
                 TileEntity tileEnd = te.getWorld().getTileEntity(con.end);
                 if( tileEnd instanceof IImmersiveConnectable ) {
                     if( te.getPos().toLong() > tileEnd.getPos().toLong() ) {
-                        tilePosVec = tilePosVec.addVector(0.001D, 0.001D, 0.001D);
+                        tilePosVec = tilePosVec.add(0.001D, 0.001D, 0.001D);
                     }
                     tessellateConnectionFast(con, te, ApiUtils.toIIC(tileEnd, te.getWorld()), con.cableType.getIcon(con), buffer, tilePosVec);
                 }

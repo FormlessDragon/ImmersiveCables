@@ -26,7 +26,7 @@ public class TileRelayRefined
     @Override
     public Vec3d getConnectionOffset(ImmersiveNetHandler.Connection con) {
         EnumFacing facing = this.getFacing();
-        return new Vec3d(0.5D + facing.getFrontOffsetX() * 0.0D, 0.5D + facing.getFrontOffsetY() * 0.0D, 0.5D + facing.getFrontOffsetZ() * 0.0D);
+        return new Vec3d(0.5D + facing.getXOffset() * 0.0D, 0.5D + facing.getYOffset() * 0.0D, 0.5D + facing.getZOffset() * 0.0D);
     }
 
     @Override

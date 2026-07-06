@@ -22,7 +22,7 @@ public class BlockCoil
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setUnlocalizedName(ICConstants.ID + ":coil_block");
+        this.setTranslationKey(ICConstants.ID + ":coil_block");
         this.setDefaultState(this.blockState.getBaseState().withProperty(TYPE, Wires.FLUIX));
         this.setRegistryName(ICConstants.ID, "coil_block");
         this.setCreativeTab(ICCreativeTab.INSTANCE);

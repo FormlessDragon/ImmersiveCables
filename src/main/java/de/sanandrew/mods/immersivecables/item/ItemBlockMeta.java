@@ -23,8 +23,8 @@ public final class ItemBlockMeta
     }
 
     @Override
-    public String getUnlocalizedName(ItemStack stack) {
-        return String.format("%s.%d", this.block.getUnlocalizedName(), stack.getItemDamage());
+    public String getTranslationKey(ItemStack stack) {
+        return String.format("%s.%d", this.block.getTranslationKey(), stack.getItemDamage());
     }
 
     @Override

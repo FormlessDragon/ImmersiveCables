@@ -37,7 +37,7 @@ public class BlockTransformerFluix
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setUnlocalizedName(ICConstants.ID + ":transformer_fluix");
+        this.setTranslationKey(ICConstants.ID + ":transformer_fluix");
         this.setDefaultState(this.blockState.getBaseState().withProperty(FluixType.TYPE, FluixType.FLUIX).withProperty(FACING, EnumFacing.UP));
         this.setRegistryName(ICConstants.ID, "transformer_fluix");
         this.setCreativeTab(ICCreativeTab.INSTANCE);
@@ -78,7 +78,7 @@ public class BlockTransformerFluix
     }
 
     @Override
-    public BlockRenderLayer getBlockLayer() {
+    public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 

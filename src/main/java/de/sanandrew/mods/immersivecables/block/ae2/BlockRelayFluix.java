@@ -32,7 +32,7 @@ public class BlockRelayFluix
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setUnlocalizedName(ICConstants.ID + ":relay_fluix");
+        this.setTranslationKey(ICConstants.ID + ":relay_fluix");
         this.setDefaultState(this.blockState.getBaseState().withProperty(FluixType.TYPE, FluixType.FLUIX).withProperty(FACING, EnumFacing.UP));
         this.setRegistryName(ICConstants.ID, "relay_fluix");
         this.setCreativeTab(ICCreativeTab.INSTANCE);
@@ -85,10 +85,5 @@ public class BlockRelayFluix
         for( int i = 0; i < FluixType.VALUES.length; i++ ) {
             items.add(new ItemStack(this, 1, i));
         }
-    }
-
-    @Override
-    public String getUnlocalizedName() {
-        return super.getUnlocalizedName();
     }
 }

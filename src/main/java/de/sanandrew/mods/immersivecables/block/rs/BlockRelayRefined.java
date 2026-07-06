@@ -26,7 +26,7 @@ public class BlockRelayRefined
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setUnlocalizedName(ICConstants.ID + ":relay_refined");
+        this.setTranslationKey(ICConstants.ID + ":relay_refined");
         this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
         this.setRegistryName(ICConstants.ID, "relay_refined");
         this.setCreativeTab(ICCreativeTab.INSTANCE);

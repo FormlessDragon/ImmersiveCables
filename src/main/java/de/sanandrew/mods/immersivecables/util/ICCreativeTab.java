@@ -21,7 +21,7 @@ public class ICCreativeTab
     }
 
     @Override
-    public ItemStack getTabIconItem() {
+    public ItemStack createIcon() {
         if( this.tabIcon.isEmpty() ) {
             this.tabIcon = new ItemStack(ItemBlockRegistry.WIRE_COIL, 1, 0);
         }

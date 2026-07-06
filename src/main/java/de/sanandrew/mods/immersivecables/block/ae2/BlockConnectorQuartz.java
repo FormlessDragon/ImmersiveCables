@@ -31,7 +31,7 @@ public class BlockConnectorQuartz
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setUnlocalizedName(ICConstants.ID + ":connector_quartz");
+        this.setTranslationKey(ICConstants.ID + ":connector_quartz");
         this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
         this.setRegistryName(ICConstants.ID, "connector_quartz");
         this.setCreativeTab(ICCreativeTab.INSTANCE);
@@ -76,10 +76,5 @@ public class BlockConnectorQuartz
                 ((TileFluixConnectable) transformer).ownerCache = (EntityPlayer) placer;
             }
         }
-    }
-
-    @Override
-    public String getUnlocalizedName() {
-        return super.getUnlocalizedName();
     }
 }

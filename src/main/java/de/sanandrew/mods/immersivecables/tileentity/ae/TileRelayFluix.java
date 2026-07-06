@@ -50,7 +50,7 @@ public class TileRelayFluix
     public Vec3d getConnectionOffset(ImmersiveNetHandler.Connection con) {
         EnumFacing facing = this.getFacing();
         double offset = this.getType() == FluixType.FLUIX_DENSE ? 0.3D : 0.1D;
-        return new Vec3d(0.5D + facing.getFrontOffsetX() * offset, 0.5D + facing.getFrontOffsetY() * offset, 0.5D + facing.getFrontOffsetZ() * offset);
+        return new Vec3d(0.5D + facing.getXOffset() * offset, 0.5D + facing.getYOffset() * offset, 0.5D + facing.getZOffset() * offset);
     }
 
     @Override

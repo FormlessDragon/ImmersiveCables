@@ -99,7 +99,7 @@ public class TileConnectorQuartz
     @Override
     public Vec3d getConnectionOffset(ImmersiveNetHandler.Connection con) {
         EnumFacing facing = this.getFacing();
-        return new Vec3d(0.5D - facing.getFrontOffsetX() * 0.1D, 0.5D - facing.getFrontOffsetY() * 0.1D, 0.5D - facing.getFrontOffsetZ() * 0.1D);
+        return new Vec3d(0.5D - facing.getXOffset() * 0.1D, 0.5D - facing.getYOffset() * 0.1D, 0.5D - facing.getZOffset() * 0.1D);
     }
 
     @Override

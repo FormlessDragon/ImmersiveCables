@@ -30,7 +30,7 @@ public class BlockTransformerRefined
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setUnlocalizedName(ICConstants.ID + ":transformer_refined");
+        this.setTranslationKey(ICConstants.ID + ":transformer_refined");
         this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
         this.setRegistryName(ICConstants.ID, "transformer_refined");
         this.setCreativeTab(ICCreativeTab.INSTANCE);
