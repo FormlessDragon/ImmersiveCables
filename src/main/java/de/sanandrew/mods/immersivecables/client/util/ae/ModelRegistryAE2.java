@@ -26,18 +26,17 @@ import java.util.HashMap;
 @SideOnly(Side.CLIENT)
 public final class ModelRegistryAE2
 {
-    @SuppressWarnings("serial")
     public static void registerModels() {
-        ModelRegistry.registerModelBlockItems(BlockRegistryAE2.RELAY_FLUIX, new HashMap<Integer, ModelResourceLocation>() {{
+        ModelRegistry.registerModelBlockItems(BlockRegistryAE2.RELAY_FLUIX, new HashMap<>() {{
             put(0, new ModelResourceLocation(ICConstants.ID + ":relay_" + FluixType.FLUIX, "inventory"));
             put(1, new ModelResourceLocation(ICConstants.ID + ":relay_" + FluixType.FLUIX_DENSE, "inventory"));
         }});
 
-        ModelRegistry.registerModelBlockItems(BlockRegistryAE2.CONNECTOR_QUARTZ, new HashMap<Integer, ModelResourceLocation>() {{
+        ModelRegistry.registerModelBlockItems(BlockRegistryAE2.CONNECTOR_QUARTZ, new HashMap<>() {{
             put(0, new ModelResourceLocation(ICConstants.ID + ":connector_quartz", "inventory"));
         }});
 
-        ModelRegistry.registerModelBlockItems(BlockRegistryAE2.TRANSFORMER_FLUIX, new HashMap<Integer, ModelResourceLocation>() {{
+        ModelRegistry.registerModelBlockItems(BlockRegistryAE2.TRANSFORMER_FLUIX, new HashMap<>() {{
             put(0, new ModelResourceLocation(ICConstants.ID + ":transformer_" + FluixType.FLUIX, "inventory"));
             put(1, new ModelResourceLocation(ICConstants.ID + ":transformer_" + FluixType.FLUIX_DENSE, "inventory"));
         }});

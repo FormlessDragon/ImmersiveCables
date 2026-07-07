@@ -6,64 +6,96 @@
    *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.tileentity.ae;
 
-import appeng.api.config.Actionable;
-import appeng.api.networking.GridFlags;
-import appeng.api.networking.IGridHost;
-import appeng.api.networking.energy.IEnergyGrid;
-import appeng.api.networking.energy.IEnergyGridProvider;
-import appeng.api.util.AECableType;
-import appeng.api.util.AEPartLocation;
-import appeng.me.GridAccessException;
-import appeng.me.helpers.AENetworkProxy;
-import appeng.me.helpers.IGridProxyable;
+import ae2.api.networking.GridFlags;
+import ae2.api.networking.IGrid;
+import ae2.api.networking.IGridNode;
+import ae2.api.networking.IManagedGridNode;
+import ae2.api.util.AECableType;
+import ae2.me.energy.IEnergyOverlayGridConnection;
+import ae2.me.service.EnergyService;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler;
 import de.sanandrew.mods.immersivecables.util.ICConfiguration;
 import de.sanandrew.mods.immersivecables.wire.Wires;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
 
+@SuppressWarnings("UnstableApiUsage")
 public class TileConnectorQuartz
         extends TileFluixConnectable
-        implements IGridProxyable, IEnergyGridProvider
 {
-    private AENetworkProxy outerProxy;
+    private static final String OUTER_NODE_TAG = "outer";
 
-    public TileConnectorQuartz() {
-        super();
-    }
+    private IManagedGridNode outerNode = this.createOuterNode();
 
     @Override
-    public void update() {
-        super.update();
-        if( this.world != null && !this.world.isRemote && this.outerProxy != null && this.outerProxy.getNode().getConnections().size() < 1 ) {
-            TileEntity otherGrid = this.world.getTileEntity(this.pos.offset(this.getFacing().getOpposite()));
-            if( otherGrid instanceof IGridHost ) {
-                this.outerProxy.getNode().updateState();
-            }
-        }
+    protected IManagedGridNode createMainNode() {
+        return super.createMainNode()
+                    .addService(IEnergyOverlayGridConnection.class, this::getOuterEnergyServices);
+    }
+
+    protected IManagedGridNode createOuterNode() {
+        return createManagedFluixNode(this)
+                       .setTagName(OUTER_NODE_TAG)
+                       .setInWorldNode(true)
+                       .setIdlePowerUsage(ICConfiguration.ae2QuartzConnectorPowerDrain)
+                       .setFlags(GridFlags.CANNOT_CARRY)
+                       .addService(IEnergyOverlayGridConnection.class, this::getMainEnergyServices);
     }
 
     @Override
     protected void onReady() {
         super.onReady();
+        this.configureOuterNode();
+        this.outerNode.create(this.world, this.pos);
+    }
 
-        this.outerProxy = new AENetworkProxy(this, "outer", this.getMachineRepresentation(), true);
-        this.outerProxy.setIdlePowerUsage(ICConfiguration.ae2QuartzConnectorPowerDrain);
-        this.outerProxy.setFlags(GridFlags.CANNOT_CARRY);
-        this.outerProxy.setValidSides(EnumSet.of(this.getFacing().getOpposite()));
-        this.outerProxy.setOwner(this.ownerCache);
-        this.outerProxy.onReady();
+    private void configureOuterNode() {
+        this.outerNode.setVisualRepresentation(this.getMachineRepresentation());
+        this.outerNode.setExposedOnSides(EnumSet.of(this.getFacing().getOpposite()));
+        if( this.ownerCache != null ) {
+            this.outerNode.setOwningPlayer(this.ownerCache);
+        }
+    }
+
+    @Override
+    public IGridNode getGridNode(EnumFacing dir) {
+        if( dir == this.getFacing().getOpposite() ) {
+            return this.outerNode.getNode();
+        }
+
+        return super.getGridNode(dir);
+    }
+
+    @Override
+    protected void saveManagedNodes(NBTTagCompound compound) {
+        super.saveManagedNodes(compound);
+        this.saveManagedNode(compound, this.outerNode, OUTER_NODE_TAG);
+    }
+
+    @Override
+    protected void destroyManagedNodes() {
+        super.destroyManagedNodes();
+        this.outerNode.destroy();
+    }
+
+    @Override
+    protected void createManagedNodes() {
+        super.createManagedNodes();
+        this.outerNode = this.createOuterNode();
+    }
+
+    @Override
+    protected void loadManagedNodes(NBTTagCompound compound) {
+        super.loadManagedNodes(compound);
+        this.loadManagedNode(compound, this.outerNode, OUTER_NODE_TAG);
     }
 
     @Override
@@ -82,7 +114,7 @@ public class TileConnectorQuartz
     }
 
     @Override
-    public AECableType getCableConnectionType(AEPartLocation aePartLocation) {
+    public AECableType getCableConnectionType(EnumFacing dir) {
         return AECableType.GLASS;
     }
 
@@ -100,14 +132,6 @@ public class TileConnectorQuartz
     public Vec3d getConnectionOffset(ImmersiveNetHandler.Connection con) {
         EnumFacing facing = this.getFacing();
         return new Vec3d(0.5D - facing.getXOffset() * 0.1D, 0.5D - facing.getYOffset() * 0.1D, 0.5D - facing.getZOffset() * 0.1D);
-    }
-
-    @Override
-    public void connectTo(BlockPos pos) {
-        super.connectTo(pos);
-        if( this.outerProxy != null ) {
-            this.outerProxy.getNode().updateState();
-        }
     }
 
     @Override
@@ -139,46 +163,22 @@ public class TileConnectorQuartz
         return this.cachedSelectionBounds;
     }
 
-    public Collection<IEnergyGridProvider> providers() {
-        LinkedList<IEnergyGridProvider> providers = new LinkedList<>();
+    private Collection<EnergyService> getMainEnergyServices() {
+        IGrid grid = this.getMainNode().getGrid();
+        if( grid == null ) {
+            return Collections.emptyList();
+        }
 
-        IEnergyGrid eg;
-        try {
-            eg = this.proxy.getEnergy();
-            providers.add(eg);
-        } catch (GridAccessException ignored) { }
-
-        try {
-            eg = this.outerProxy.getEnergy();
-            providers.add(eg);
-        } catch (GridAccessException ignored) { }
-
-        return providers;
+        return Collections.singletonList((EnergyService) grid.getEnergyService());
     }
 
-    @Override
-    public double extractProviderPower(double amt, Actionable mode) {
-        return 0;
-    }
+    private Collection<EnergyService> getOuterEnergyServices() {
+        IGrid grid = this.outerNode.getGrid();
+        if( grid == null ) {
+            return Collections.emptyList();
+        }
 
-    @Override
-    public double injectProviderPower(double v, @Nonnull Actionable actionable) {
-        return v;
-    }
-
-    @Override
-    public double getProviderEnergyDemand(double amt) {
-        return 0.0D;
-    }
-
-    @Override
-    public double getProviderStoredEnergy() {
-        return 0.0D;
-    }
-
-    @Override
-    public double getProviderMaxEnergy() {
-        return 0.0D;
+        return Collections.singletonList((EnergyService) grid.getEnergyService());
     }
 
     @Override

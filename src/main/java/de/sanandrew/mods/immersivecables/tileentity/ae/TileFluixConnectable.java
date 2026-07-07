@@ -6,17 +6,16 @@
    *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.tileentity.ae;
 
-import appeng.api.AEApi;
-import appeng.api.exceptions.FailedConnectionException;
-import appeng.api.networking.GridFlags;
-import appeng.api.networking.IGridConnection;
-import appeng.api.networking.IGridHost;
-import appeng.api.networking.IGridNode;
-import appeng.api.networking.security.IActionHost;
-import appeng.api.util.AEPartLocation;
-import appeng.api.util.DimensionalCoord;
-import appeng.me.helpers.AENetworkProxy;
-import appeng.me.helpers.IGridProxyable;
+import ae2.api.AECapabilities;
+import ae2.api.networking.GridFlags;
+import ae2.api.networking.GridHelper;
+import ae2.api.networking.IGridConnection;
+import ae2.api.networking.IGridNode;
+import ae2.api.networking.IGridNodeListener;
+import ae2.api.networking.IInWorldGridNodeHost;
+import ae2.api.networking.IManagedGridNode;
+import ae2.api.networking.security.IActionHost;
+import ae2.api.util.AECableType;
 import blusunrize.immersiveengineering.api.TargetingInfo;
 import blusunrize.immersiveengineering.api.energy.wires.IImmersiveConnectable;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler;
@@ -29,72 +28,84 @@ import de.sanandrew.mods.immersivecables.util.ICConstants;
 import de.sanandrew.mods.immersivecables.util.ImmersiveCables;
 import net.minecraft.block.BlockDirectional;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.common.capabilities.Capability;
 import org.apache.logging.log4j.Level;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class TileFluixConnectable
         extends TileEntityImmersiveConnectable
-        implements IActionHost, IGridProxyable, ITickable, IEBlockInterfaces.IAdvancedSelectionBounds
+        implements IActionHost, IInWorldGridNodeHost, ITickable, IEBlockInterfaces.IAdvancedSelectionBounds
 {
-    private Queue<IGridConnection> connections = new ConcurrentLinkedQueue<>();
-    AENetworkProxy proxy = this.createProxy();
+    protected static final String MAIN_NODE_TAG = "proxy";
+    private static final IGridNodeListener<TileFluixConnectable> NODE_LISTENER = new FluixGridNodeListener();
+
+    private final Map<BlockPos, IGridConnection> connections = new ConcurrentHashMap<>();
+    private final Map<String, NBTTagCompound> managedNodeData = new HashMap<>();
+    private IManagedGridNode mainNode = this.createMainNode();
     public EntityPlayer ownerCache;
 
     List<AxisAlignedBB> cachedSelectionBounds;
 
     private boolean loaded = false;
 
-    private AENetworkProxy createProxy() {
-        return new AENetworkProxy(this, "proxy", new ItemStack(Blocks.BONE_BLOCK), true);
+    protected IManagedGridNode createMainNode() {
+        return createManagedFluixNode(this)
+                       .setTagName(MAIN_NODE_TAG)
+                       .setInWorldNode(true);
+    }
+
+    protected static IManagedGridNode createManagedFluixNode(TileFluixConnectable owner) {
+        return GridHelper.createManagedNode(owner, NODE_LISTENER);
+    }
+
+    protected final IManagedGridNode getMainNode() {
+        return this.mainNode;
     }
 
     @Override
-    public IGridNode getGridNode(AEPartLocation aePartLocation) {
-        return this.proxy.getNode();
+    public IGridNode getGridNode(@Nullable EnumFacing dir) {
+        return this.mainNode.getNode();
     }
 
     @Override
     public void onChunkUnload() {
         super.onChunkUnload();
-        this.connections.forEach(IGridConnection::destroy);
-        this.connections.clear();
-        this.proxy.onChunkUnload();
+        this.resetManagedNodes();
     }
 
-    @Override
     public void securityBreak() {
         this.world.destroyBlock(this.pos, true);
     }
 
     protected void onReady() {
-        this.proxy.setVisualRepresentation(this.getMachineRepresentation());
-        this.proxy.setIdlePowerUsage(this.getIdlePowerUsage());
-        this.proxy.setValidSides(this.getConnectableSides());
-        this.proxy.setFlags(this.getFlags());
-        if( this.ownerCache != null ) {
-            this.proxy.setOwner(this.ownerCache);
-        }
-        this.proxy.onReady();
+        this.configureMainNode();
+        this.mainNode.create(this.world, this.pos);
+    }
 
-        this.proxy.getNode().updateState();
+    protected void configureMainNode() {
+        this.mainNode.setVisualRepresentation(this.getMachineRepresentation());
+        this.mainNode.setIdlePowerUsage(this.getIdlePowerUsage());
+        this.mainNode.setExposedOnSides(this.getConnectableSides());
+        this.mainNode.setFlags(this.getFlags());
+        if( this.ownerCache != null ) {
+            this.mainNode.setOwningPlayer(this.ownerCache);
+        }
     }
 
     @Override
@@ -126,18 +137,11 @@ public abstract class TileFluixConnectable
     @Override
     public void removeCable(ImmersiveNetHandler.Connection connection) {
         if( !this.world.isRemote && connection != null ) {
-            BlockPos opposite = connection.end;
-            if (opposite.equals(Utils.toCC(this))) {
-                return;
-            }
-
-            for (IGridConnection gridConnection : this.connections) {
-                DimensionalCoord locA = gridConnection.a().getGridBlock().getLocation();
-                DimensionalCoord locB = gridConnection.b().getGridBlock().getLocation();
-                if( (opposite.getX() == locA.x && opposite.getZ() == locA.z && opposite.getY() == locA.y) || (opposite.getX() == locB.x && opposite.getZ() == locB.z && opposite.getY() == locB.y)) {
-                    gridConnection.destroy();
-                    this.connections.remove(gridConnection);
-                    break;
+            BlockPos opposite = this.getOppositeConnectionEnd(connection);
+            if( opposite != null ) {
+                IGridConnection gridConnection = this.connections.remove(opposite);
+                if( gridConnection != null ) {
+                    this.destroyTrackedConnection(gridConnection);
                 }
             }
         }
@@ -148,6 +152,8 @@ public abstract class TileFluixConnectable
     public abstract double getIdlePowerUsage();
     public abstract EnumSet<EnumFacing> getConnectableSides();
     public abstract GridFlags[] getFlags();
+    @Override
+    public abstract AECableType getCableConnectionType(EnumFacing dir);
     protected abstract String getWireCategory();
 
     @Override
@@ -160,12 +166,10 @@ public abstract class TileFluixConnectable
                 Set<ImmersiveNetHandler.Connection> connections = ImmersiveNetHandler.INSTANCE.getConnections(this.world, Utils.toCC(this));
                 if( connections != null ) {
                     for( ImmersiveNetHandler.Connection connection : connections ) {
-                        BlockPos opposite = connection.end;
-                        if( opposite.equals(Utils.toCC(this)) ) {
-                            continue;
+                        BlockPos opposite = this.getOppositeConnectionEnd(connection);
+                        if( opposite != null ) {
+                            this.connectTo(opposite);
                         }
-
-                        this.connectTo(opposite);
                     }
                 }
             }
@@ -180,68 +184,190 @@ public abstract class TileFluixConnectable
     @Override
     public void invalidate() {
         super.invalidate();
-        this.connections.forEach(IGridConnection::destroy);
-        this.connections.clear();
-        this.proxy.invalidate();
+        this.resetManagedNodes();
     }
 
-    @Override
-    public void validate() {
-        super.validate();
-        this.proxy.validate();
+    private void resetManagedNodes() {
+        NBTTagCompound nodeData = new NBTTagCompound();
+        this.saveManagedNodes(nodeData);
+        this.destroyVirtualConnections();
+        this.destroyManagedNodes();
+        this.createManagedNodes();
+        this.loadManagedNodes(nodeData);
+        this.loaded = false;
     }
 
-    @Override
-    public AENetworkProxy getProxy() {
-        return this.proxy;
+    protected void saveManagedNodes(NBTTagCompound compound) {
+        this.saveManagedNode(compound, this.mainNode, MAIN_NODE_TAG);
     }
 
-    @Override
-    public DimensionalCoord getLocation() {
-        return new DimensionalCoord(this);
+    protected void destroyManagedNodes() {
+        this.mainNode.destroy();
     }
 
-    @Override
+    protected void createManagedNodes() {
+        this.mainNode = this.createMainNode();
+    }
+
+    protected void loadManagedNodes(NBTTagCompound compound) {
+        this.loadManagedNode(compound, this.mainNode, MAIN_NODE_TAG);
+    }
+
+    protected final void saveManagedNode(NBTTagCompound compound, IManagedGridNode node, String tagName) {
+        if( node.getNode() != null ) {
+            node.saveToNBT(compound);
+            this.storeManagedNodeData(compound, tagName);
+        } else {
+            this.writeStoredManagedNodeData(compound, tagName);
+        }
+    }
+
+    protected final void loadManagedNode(NBTTagCompound compound, IManagedGridNode node, String tagName) {
+        this.storeManagedNodeData(compound, tagName);
+        node.loadFromNBT(compound);
+    }
+
+    private void storeManagedNodeData(NBTTagCompound compound, String tagName) {
+        if( compound.hasKey(tagName, 10) ) {
+            this.managedNodeData.put(tagName, compound.getCompoundTag(tagName).copy());
+        } else {
+            this.managedNodeData.remove(tagName);
+        }
+    }
+
+    private void writeStoredManagedNodeData(NBTTagCompound compound, String tagName) {
+        NBTTagCompound nodeData = this.managedNodeData.get(tagName);
+        if( nodeData != null ) {
+            compound.setTag(tagName, nodeData.copy());
+        }
+    }
+
     public void gridChanged() {
-        for( Iterator<IGridConnection> it = this.connections.iterator(); it.hasNext(); ) {
-            IGridConnection conn = it.next();
-            if( isNodeInUnloadedChunk(conn.a()) || isNodeInUnloadedChunk(conn.b()) ) {
-                conn.destroy();
-                it.remove();
+        IGridNode node = this.mainNode.getNode();
+        if( node == null ) {
+            this.connections.clear();
+            return;
+        }
+
+        for( Map.Entry<BlockPos, IGridConnection> entry : this.connections.entrySet() ) {
+            BlockPos opposite = entry.getKey();
+            IGridConnection conn = entry.getValue();
+            if( !node.getConnections().contains(conn) ) {
+                this.connections.remove(opposite, conn);
+            } else if( !ImmersiveCables.isChunkLoaded(this.world.getChunkProvider(), opposite.getX() >> 4, opposite.getZ() >> 4) ) {
+                this.destroyTrackedConnection(conn);
+                this.connections.remove(opposite, conn);
             }
         }
+    }
+
+    protected void onGridNodeStateChanged(IGridNodeListener.State state) {
+        this.gridChanged();
+    }
+
+    private void destroyVirtualConnections() {
+        for( IGridConnection connection : this.connections.values() ) {
+            this.destroyTrackedConnection(connection);
+        }
+        this.connections.clear();
+    }
+
+    private void destroyTrackedConnection(IGridConnection connection) {
+        IGridNode node = this.mainNode.getNode();
+        if( node != null && node.getConnections().contains(connection) ) {
+            connection.destroy();
+        }
+    }
+
+    @Nullable
+    private BlockPos getOppositeConnectionEnd(ImmersiveNetHandler.Connection connection) {
+        BlockPos here = Utils.toCC(this);
+        if( connection.start.equals(here) ) {
+            return connection.end;
+        } else if( connection.end.equals(here) ) {
+            return connection.start;
+        }
+
+        ICConstants.LOG.log(Level.DEBUG, "Ignoring AE2 grid removal for unrelated IE connection at " + this.pos);
+        return null;
     }
 
     @Override
     public IGridNode getActionableNode() {
-        return this.proxy.getNode();
+        return this.mainNode.getNode();
     }
 
-    private static boolean isNodeInUnloadedChunk(IGridNode node) {
-        DimensionalCoord coord = node.getGridBlock().getLocation();
-        return !ImmersiveCables.isChunkLoaded(node.getWorld().getChunkProvider(), coord.x >> 4, coord.z >> 4);
+    @Nullable
+    private static IGridNode getConnectableGridNode(IInWorldGridNodeHost host) {
+        if( host instanceof TileFluixConnectable ) {
+            return ((TileFluixConnectable) host).getMainNode().getNode();
+        }
+
+        for( EnumFacing facing : EnumFacing.VALUES ) {
+            IGridNode node = host.getGridNode(facing);
+            if( node != null ) {
+                return node;
+            }
+        }
+
+        return host.getGridNode(null);
     }
 
     public void connectTo(BlockPos pos) {
+        if( this.world == null || this.world.isRemote ) {
+            return;
+        }
+
         if( ImmersiveCables.isChunkLoaded(this.world.getChunkProvider(), pos.getX() >> 4, pos.getZ() >> 4) ) {
-            TileEntity teOpposite = this.world.getTileEntity(pos);
-            if( teOpposite instanceof IGridHost ) {
-                IGridNode nodeA = ((IGridHost) teOpposite).getGridNode(AEPartLocation.INTERNAL);
-                IGridNode nodeB = getGridNode(AEPartLocation.INTERNAL);
-                try {
-                    if( nodeA != null ) {
-                        IGridConnection conn = AEApi.instance().grid().createGridConnection(nodeA, nodeB);
-                        this.connections.add(conn);
-                    }
-                } catch( FailedConnectionException ex ) {
-                    ICConstants.LOG.log(Level.DEBUG, ex.getMessage());
-                }
+            IGridNode nodeB = this.getGridNode(null);
+            if( nodeB == null ) {
+                ICConstants.LOG.log(Level.DEBUG, "Cannot create AE2 grid connection from " + this.pos + " to " + pos + ": local node is not ready");
+                return;
+            }
+
+            IInWorldGridNodeHost host = GridHelper.getNodeHost(this.world, pos);
+            if( host == null ) {
+                return;
+            }
+
+            IGridNode nodeA = getConnectableGridNode(host);
+            if( nodeA == null ) {
+                ICConstants.LOG.log(Level.DEBUG, "Cannot create AE2 grid connection from " + this.pos + " to " + pos + ": remote node is not ready");
+                return;
+            }
+
+            IGridConnection existing = this.connections.get(pos);
+            if( existing != null && nodeB.getConnections().contains(existing) ) {
+                return;
+            } else if( existing != null ) {
+                this.connections.remove(pos, existing);
+            }
+
+            try {
+                IGridConnection conn = GridHelper.createConnection(nodeA, nodeB);
+                this.connections.put(pos, conn);
+            } catch( IllegalStateException ex ) {
+                ICConstants.LOG.log(Level.DEBUG, "AE2 grid connection already exists between " + this.pos + " and " + pos, ex);
             }
         }
     }
 
+    @Override
+    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+        return capability == AECapabilities.IN_WORLD_GRID_NODE_HOST || super.hasCapability(capability, facing);
+    }
+
+    @Override
+    public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
+        if( capability == AECapabilities.IN_WORLD_GRID_NODE_HOST ) {
+            return AECapabilities.IN_WORLD_GRID_NODE_HOST.cast(this);
+        }
+
+        return super.getCapability(capability, facing);
+    }
+
     protected EnumFacing getFacing() {
-        return !this.world.isAirBlock(this.pos) ? this.world.getBlockState(this.pos).getValue(BlockDirectional.FACING) : EnumFacing.UP;
+        return this.world != null && !this.world.isAirBlock(this.pos) ? this.world.getBlockState(this.pos).getValue(BlockDirectional.FACING) : EnumFacing.UP;
     }
 
     public AxisAlignedBB getRenderBoundingBox() {
@@ -251,14 +377,14 @@ public abstract class TileFluixConnectable
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound = super.writeToNBT(compound);
-        this.proxy.writeToNBT(compound);
+        this.saveManagedNodes(compound);
         return compound;
     }
 
     @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
-        this.proxy.readFromNBT(compound);
+        this.loadManagedNodes(compound);
     }
 
     @Override
@@ -269,5 +395,24 @@ public abstract class TileFluixConnectable
     @Override
     public float[] getBlockBounds() {
         return null;
+    }
+
+    private static final class FluixGridNodeListener
+            implements IGridNodeListener<TileFluixConnectable>
+    {
+        @Override
+        public void onSaveChanges(TileFluixConnectable nodeOwner, IGridNode node) {
+            nodeOwner.markDirty();
+        }
+
+        @Override
+        public void onGridChanged(TileFluixConnectable nodeOwner, IGridNode node) {
+            nodeOwner.gridChanged();
+        }
+
+        @Override
+        public void onStateChanged(TileFluixConnectable nodeOwner, IGridNode node, State state) {
+            nodeOwner.onGridNodeStateChanged(state);
+        }
     }
 }

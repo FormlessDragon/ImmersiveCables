@@ -6,9 +6,8 @@
    *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.tileentity.ae;
 
-import appeng.api.networking.GridFlags;
-import appeng.api.util.AECableType;
-import appeng.api.util.AEPartLocation;
+import ae2.api.networking.GridFlags;
+import ae2.api.util.AECableType;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler;
 import de.sanandrew.mods.immersivecables.block.ae2.FluixType;
 import de.sanandrew.mods.immersivecables.util.ICConfiguration;
@@ -42,7 +41,7 @@ public class TileRelayFluix
     }
 
     @Override
-    public AECableType getCableConnectionType(AEPartLocation aePartLocation) {
+    public AECableType getCableConnectionType(EnumFacing dir) {
         return this.getType().cableType;
     }
 

@@ -6,8 +6,6 @@
    *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.util;
 
-import appeng.api.networking.IGridNode;
-import appeng.api.util.DimensionalCoord;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.fml.common.Mod;

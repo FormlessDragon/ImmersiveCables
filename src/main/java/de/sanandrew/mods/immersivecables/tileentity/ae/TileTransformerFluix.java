@@ -6,12 +6,9 @@
    *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.tileentity.ae;
 
-import appeng.api.networking.GridFlags;
-import appeng.api.networking.events.MENetworkChannelsChanged;
-import appeng.api.networking.events.MENetworkEventSubscribe;
-import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.util.AECableType;
-import appeng.api.util.AEPartLocation;
+import ae2.api.networking.GridFlags;
+import ae2.api.networking.IGridNodeListener;
+import ae2.api.util.AECableType;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler;
 import de.sanandrew.mods.immersivecables.block.BlockConnectable;
 import de.sanandrew.mods.immersivecables.block.ae2.BlockTransformerFluix;
@@ -27,7 +24,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -54,7 +50,7 @@ public class TileTransformerFluix
     }
 
     @Override
-    public AECableType getCableConnectionType(AEPartLocation aePartLocation) {
+    public AECableType getCableConnectionType(EnumFacing dir) {
         return this.getType().cableType;
     }
 
@@ -70,13 +66,9 @@ public class TileTransformerFluix
         this.updateOnGridChange(false);
     }
 
-    @MENetworkEventSubscribe
-    public void powerRender(MENetworkPowerStatusChange c) {
-        this.updateOnGridChange(true);
-    }
-
-    @MENetworkEventSubscribe
-    public void channelUpdated(MENetworkChannelsChanged c) {
+    @Override
+    protected void onGridNodeStateChanged(IGridNodeListener.State state) {
+        super.gridChanged();
         this.updateOnGridChange(true);
     }
 
@@ -98,14 +90,14 @@ public class TileTransformerFluix
         NBTTagCompound nbt = new NBTTagCompound();
         this.writeToNBT(nbt);
         this.writeCustomNBT(nbt, true);
-        nbt.setBoolean("meActive", this.proxy.getNode() != null && this.proxy.getNode().isActive());
+        nbt.setBoolean("meActive", this.getMainNode().isActive());
         return new SPacketUpdateTileEntity(this.pos, 1, nbt);
     }
 
     @Override
     public NBTTagCompound getUpdateTag() {
         NBTTagCompound nbt = super.getUpdateTag();
-        nbt.setBoolean("meActive", this.proxy.getNode() != null && this.proxy.getNode().isActive());
+        nbt.setBoolean("meActive", this.getMainNode().isActive());
         return nbt;
     }
 
@@ -127,7 +119,7 @@ public class TileTransformerFluix
     private void updateOnGridChange(boolean force) {
         if( !this.world.isRemote && !this.world.isAirBlock(this.pos) ) {
             boolean prevActive = this.isActive;
-            this.isActive = this.proxy.getNode() != null && this.proxy.getNode().isActive();
+            this.isActive = this.getMainNode().isActive();
             if( prevActive != this.isActive || force ) {
                 this.markDirty();
                 this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos).withProperty(BlockTransformerFluix.ACTIVE, this.isActive), 3);

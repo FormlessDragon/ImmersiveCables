@@ -25,10 +25,10 @@ import java.util.Objects;
 public final class RecipeRegistryAE2
 {
     public static void initialize(RegistryEvent.Register<IRecipe> event, ResourceLocation group) {
-        ItemStack fluixCrystal = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("appliedenergistics2:material")), 1, 12);
-        ItemStack denseFluixCrystal = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("appliedenergistics2:material")), 1, 7);
-        ItemStack quartzCrystal = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("appliedenergistics2:material")), 1, 11);
-        ItemStack skyStone = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("appliedenergistics2:smooth_sky_stone_block")), 1);
+        ItemStack fluixCrystal = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("ae2:fluix_crystal")), 1);
+        ItemStack fluixBlock = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("ae2:fluix_block")), 1);
+        ItemStack quartzCrystal = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("ae2:certus_quartz_crystal")), 1);
+        ItemStack skyStone = new ItemStack(Objects.requireNonNull(Item.getByNameOrId("ae2:smooth_sky_stone_block")), 1);
 
         event.getRegistry().register(new ShapedOreRecipe(group, new ItemStack(ItemBlockRegistry.WIRE_COIL, 4, Wires.FLUIX.ordinal()),
                                                          " F ", "WSW", " F ",
@@ -45,13 +45,13 @@ public final class RecipeRegistryAE2
 
         event.getRegistry().register(new ShapedOreRecipe(group, new ItemStack(ItemBlockRegistry.WIRE_COIL, 4, Wires.FLUIX_DENSE.ordinal()),
                                                          " F ", "WSW", " F ",
-                                                         'F', denseFluixCrystal,
+                                                         'F', fluixBlock,
                                                          'W', "wireSteel",
                                                          'S', "stickWood")
                                              .setRegistryName(ICConstants.ID, "wire_coil_dense_s"));
         event.getRegistry().register(new ShapedOreRecipe(group, new ItemStack(ItemBlockRegistry.WIRE_COIL, 4, Wires.FLUIX_DENSE.ordinal()),
                                                          " F ", "WSW", " F ",
-                                                         'F', denseFluixCrystal,
+                                                         'F', fluixBlock,
                                                          'W', "wireSteel",
                                                          'S', "stickTreatedWood")
                                              .setRegistryName(ICConstants.ID, "wire_coil_dense_t"));
@@ -78,7 +78,7 @@ public final class RecipeRegistryAE2
 
         event.getRegistry().register(new ShapedRecipes(group.toString(), 3, 3,
                                                        CraftingHelper.parseShaped(" F ", "SFS", "SFS",
-                                                                                  'F', denseFluixCrystal,
+                                                                                  'F', fluixBlock,
                                                                                   'S', skyStone).input,
                                                        new ItemStack(BlockRegistryAE2.RELAY_FLUIX, 8, FluixType.FLUIX_DENSE.ordinal()))
                                              .setRegistryName(ICConstants.ID, "relay_dense"));

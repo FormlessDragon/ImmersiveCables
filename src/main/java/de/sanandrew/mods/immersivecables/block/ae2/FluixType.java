@@ -6,8 +6,8 @@
    *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.block.ae2;
 
-import appeng.api.networking.GridFlags;
-import appeng.api.util.AECableType;
+import ae2.api.networking.GridFlags;
+import ae2.api.util.AECableType;
 import blusunrize.immersiveengineering.api.energy.wires.WireType;
 import de.sanandrew.mods.immersivecables.wire.Wires;
 import net.minecraft.block.properties.PropertyEnum;
