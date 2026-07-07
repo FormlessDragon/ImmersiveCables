@@ -17,5 +17,5 @@ public final class ICConstants
     public static final String VERSION = Tags.VERSION;
     public static final String NAME = Tags.MOD_NAME;
     public static final String DEPENDENCIES = "required-after:forge@[14.23.4.2739,];required-after:immersiveengineering@[0.12-78,];" +
-                                                      "required-after:" + "Applied Energistics 2 Supergiant" + ';';
+                                                      "required-after:ae2" + ';';
 }
