@@ -4,12 +4,12 @@
    * License:   Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
    *                http://creativecommons.org/licenses/by-nc-sa/4.0/
    *******************************************************************************************************************/
-package de.sanandrew.mods.immersivecables.tileentity.ae;
+package de.sanandrew.mods.immersivecables.tileentity;
 
 import ae2.api.networking.GridFlags;
 import ae2.api.util.AECableType;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler;
-import de.sanandrew.mods.immersivecables.block.ae2.FluixType;
+import de.sanandrew.mods.immersivecables.block.FluixType;
 import de.sanandrew.mods.immersivecables.util.ICConfiguration;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;

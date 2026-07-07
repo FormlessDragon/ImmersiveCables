@@ -4,15 +4,15 @@
    * License:   Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
    *                http://creativecommons.org/licenses/by-nc-sa/4.0/
    *******************************************************************************************************************/
-package de.sanandrew.mods.immersivecables.block.ae2;
+package de.sanandrew.mods.immersivecables.block;
 
-import de.sanandrew.mods.immersivecables.block.BlockConnectable;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileFluixConnectable;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileRelayFluix;
+import de.sanandrew.mods.immersivecables.tileentity.TileFluixConnectable;
+import de.sanandrew.mods.immersivecables.tileentity.TileTransformerFluix;
 import de.sanandrew.mods.immersivecables.util.ICConstants;
 import de.sanandrew.mods.immersivecables.util.ICCreativeTab;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
@@ -20,21 +20,25 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-public class BlockRelayFluix
+public class BlockTransformerFluix
         extends BlockConnectable
 {
-    public BlockRelayFluix() {
+    public static final PropertyBool ACTIVE = PropertyBool.create("active");
+
+    public BlockTransformerFluix() {
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setTranslationKey(ICConstants.ID + ":relay_fluix");
+        this.setTranslationKey(ICConstants.ID + ":transformer_fluix");
         this.setDefaultState(this.blockState.getBaseState().withProperty(FluixType.TYPE, FluixType.FLUIX).withProperty(FACING, EnumFacing.UP));
-        this.setRegistryName(ICConstants.ID, "relay_fluix");
+        this.setRegistryName(ICConstants.ID, "transformer_fluix");
         this.setCreativeTab(ICCreativeTab.INSTANCE);
     }
 
@@ -57,17 +61,24 @@ public class BlockRelayFluix
 
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileRelayFluix();
+        return new TileTransformerFluix();
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FluixType.TYPE, FACING);
+        return new BlockStateContainer(this, FluixType.TYPE, FACING, ACTIVE);
     }
 
     @Override
-    public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis) {
-        return false;
+    public void getSubBlocks(CreativeTabs creativeTabs, NonNullList<ItemStack> items) {
+        for( int i = 0; i < FluixType.VALUES.length; i++ ) {
+            items.add(new ItemStack(this, 1, i));
+        }
+    }
+
+    @Override
+    public BlockRenderLayer getRenderLayer() {
+        return BlockRenderLayer.CUTOUT;
     }
 
     @Override
@@ -81,9 +92,16 @@ public class BlockRelayFluix
     }
 
     @Override
-    public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items) {
-        for( int i = 0; i < FluixType.VALUES.length; i++ ) {
-            items.add(new ItemStack(this, 1, i));
-        }
+    public void onNeighborChange(IBlockAccess world, BlockPos pos, BlockPos neighbor) { }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return state.withProperty(ACTIVE, isMeActive(world, pos));
+    }
+
+    private static boolean isMeActive(IBlockAccess world, BlockPos pos) {
+        TileEntity te = world.getTileEntity(pos);
+        return te instanceof TileTransformerFluix && ((TileTransformerFluix) te).isMeActive();
     }
 }

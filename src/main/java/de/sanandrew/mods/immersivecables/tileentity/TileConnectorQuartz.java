@@ -4,7 +4,7 @@
    * License:   Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
    *                http://creativecommons.org/licenses/by-nc-sa/4.0/
    *******************************************************************************************************************/
-package de.sanandrew.mods.immersivecables.tileentity.ae;
+package de.sanandrew.mods.immersivecables.tileentity;
 
 import ae2.api.networking.GridFlags;
 import ae2.api.networking.IGrid;

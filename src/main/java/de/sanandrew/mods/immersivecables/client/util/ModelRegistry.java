@@ -8,9 +8,6 @@
  */
 package de.sanandrew.mods.immersivecables.client.util;
 
-import de.sanandrew.mods.immersivecables.client.util.ae.ModelRegistryAE2;
-import de.sanandrew.mods.immersivecables.client.util.rs.ModelRegistryRS;
-import de.sanandrew.mods.immersivecables.util.ICConfiguration;
 import de.sanandrew.mods.immersivecables.util.ICConstants;
 import de.sanandrew.mods.immersivecables.util.ItemBlockRegistry;
 import de.sanandrew.mods.immersivecables.wire.Wires;
@@ -33,21 +30,15 @@ import java.util.Map;
 public final class ModelRegistry
 {
     @SubscribeEvent
-    @SuppressWarnings("serial")
     public static void registerModels(ModelRegistryEvent event) {
-        ModelRegistry.registerModelBlockItems(ItemBlockRegistry.BLOCK_COIL, new HashMap<Integer, ModelResourceLocation>() {{
+        ModelRegistry.registerModelBlockItems(ItemBlockRegistry.BLOCK_COIL, new HashMap<>() {{
             Arrays.stream(Wires.VALUES).forEach(wire -> put(wire.ordinal(), new ModelResourceLocation(ICConstants.ID + ":coil_block_" + wire.getName(), "inventory")));
         }});
 
         Arrays.stream(Wires.VALUES).forEach(wire -> ModelLoader.setCustomModelResourceLocation(ItemBlockRegistry.WIRE_COIL, wire.ordinal(),
                                                                                                new ModelResourceLocation(ICConstants.ID + ":wire_" + wire.getName(), "inventory")));
 
-        if( ICConfiguration.isAe2Enabled() ) {
-            ModelRegistryAE2.registerModels();
-        }
-        if( ICConfiguration.isRsEnabled() ) {
-            ModelRegistryRS.registerModels();
-        }
+        ModelRegistryAE2.registerModels();
     }
 
     public static void registerModelBlockItems(Block block, Map<Integer, ModelResourceLocation> metaToLocation) {

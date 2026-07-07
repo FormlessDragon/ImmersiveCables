@@ -6,8 +6,8 @@
  *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.recipes;
 
-import de.sanandrew.mods.immersivecables.block.ae2.BlockRegistryAE2;
-import de.sanandrew.mods.immersivecables.block.ae2.FluixType;
+import de.sanandrew.mods.immersivecables.block.BlockRegistryAE2;
+import de.sanandrew.mods.immersivecables.block.FluixType;
 import de.sanandrew.mods.immersivecables.util.ICConstants;
 import de.sanandrew.mods.immersivecables.util.ItemBlockRegistry;
 import de.sanandrew.mods.immersivecables.wire.Wires;

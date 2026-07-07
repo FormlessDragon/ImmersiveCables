@@ -142,9 +142,9 @@ public class ItemCoil
                                         ImmersiveNetHandler.Connection tmpConn = new ImmersiveNetHandler.Connection(Utils.toCC(nodeHere), Utils.toCC(nodeLink), wire,
                                                                                                                     (int) Math.sqrt(distanceSq));
                                         Vec3d start = nodeHere.getConnectionOffset(tmpConn, target, pos.subtract(masterPos));
-					Vec3d end = nodeLink.getConnectionOffset(tmpConn, targetLink, offsetLink).add(linkPos.getX()-masterPos.getX(),
-											linkPos.getY()-masterPos.getY(),
-											linkPos.getZ()-masterPos.getZ());
+                    Vec3d end = nodeLink.getConnectionOffset(tmpConn, targetLink, offsetLink).add(linkPos.getX()-masterPos.getX(),
+                                            linkPos.getY()-masterPos.getY(),
+                                            linkPos.getZ()-masterPos.getZ());
                                         boolean canSee = ApiUtils.raytraceAlongCatenaryRelative(tmpConn, (p) -> {
                                             if (ignore.contains(p.getLeft())) {
                                                 return false;

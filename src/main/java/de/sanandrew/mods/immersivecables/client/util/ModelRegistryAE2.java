@@ -6,15 +6,14 @@
  * http://creativecommons.org/licenses/by-nc-sa/4.0/
  * *****************************************************************************************************************
  */
-package de.sanandrew.mods.immersivecables.client.util.ae;
+package de.sanandrew.mods.immersivecables.client.util;
 
-import de.sanandrew.mods.immersivecables.block.ae2.BlockRegistryAE2;
-import de.sanandrew.mods.immersivecables.block.ae2.FluixType;
+import de.sanandrew.mods.immersivecables.block.BlockRegistryAE2;
+import de.sanandrew.mods.immersivecables.block.FluixType;
 import de.sanandrew.mods.immersivecables.client.render.RenderTileIWConnectable;
-import de.sanandrew.mods.immersivecables.client.util.ModelRegistry;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileConnectorQuartz;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileRelayFluix;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileTransformerFluix;
+import de.sanandrew.mods.immersivecables.tileentity.TileConnectorQuartz;
+import de.sanandrew.mods.immersivecables.tileentity.TileRelayFluix;
+import de.sanandrew.mods.immersivecables.tileentity.TileTransformerFluix;
 import de.sanandrew.mods.immersivecables.util.ICConstants;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.fml.client.registry.ClientRegistry;

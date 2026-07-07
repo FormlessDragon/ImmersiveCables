@@ -6,7 +6,6 @@
  *******************************************************************************************************************/
 package de.sanandrew.mods.immersivecables.recipes;
 
-import de.sanandrew.mods.immersivecables.util.ICConfiguration;
 import de.sanandrew.mods.immersivecables.util.ICConstants;
 import de.sanandrew.mods.immersivecables.util.ItemBlockRegistry;
 import de.sanandrew.mods.immersivecables.wire.Wires;
@@ -32,12 +31,6 @@ public final class RecipeRegistry
                                                  .setRegistryName(ICConstants.ID, "wire_coil_block_" + wire.getName()));
         }
 
-        if( ICConfiguration.isAe2Enabled() ) {
-            RecipeRegistryAE2.initialize(event, group);
-        }
-
-        if( ICConfiguration.isRsEnabled() ) {
-            RecipeRegistryRS.initialize(event, group);
-        }
+        RecipeRegistryAE2.initialize(event, group);
     }
 }

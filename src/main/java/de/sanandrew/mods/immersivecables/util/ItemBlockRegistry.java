@@ -7,8 +7,7 @@
 package de.sanandrew.mods.immersivecables.util;
 
 import de.sanandrew.mods.immersivecables.block.BlockCoil;
-import de.sanandrew.mods.immersivecables.block.ae2.BlockRegistryAE2;
-import de.sanandrew.mods.immersivecables.block.rs.BlockRegistryRS;
+import de.sanandrew.mods.immersivecables.block.BlockRegistryAE2;
 import de.sanandrew.mods.immersivecables.item.ItemBlockMeta;
 import de.sanandrew.mods.immersivecables.item.ItemCoil;
 import net.minecraft.block.Block;
@@ -28,12 +27,7 @@ public final class ItemBlockRegistry
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         event.getRegistry().registerAll(BLOCK_COIL);
 
-        if( ICConfiguration.isAe2Enabled() ) {
-            BlockRegistryAE2.registerBlocks(event);
-        }
-        if( ICConfiguration.isRsEnabled() ) {
-            BlockRegistryRS.registerBlocks(event);
-        }
+        BlockRegistryAE2.registerBlocks(event);
     }
 
     @SubscribeEvent
@@ -42,11 +36,6 @@ public final class ItemBlockRegistry
 
         event.getRegistry().registerAll(WIRE_COIL);
 
-        if( ICConfiguration.isAe2Enabled() ) {
-            BlockRegistryAE2.registerItems(event);
-        }
-        if( ICConfiguration.isRsEnabled() ) {
-            BlockRegistryRS.registerItems(event);
-        }
+        BlockRegistryAE2.registerItems(event);
     }
 }

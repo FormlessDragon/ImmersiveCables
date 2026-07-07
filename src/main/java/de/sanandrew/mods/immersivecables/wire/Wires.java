@@ -16,8 +16,7 @@ public enum Wires
 {
     FLUIX(new FluixWire()),
     FLUIX_DENSE(new FluixDenseWire()),
-    QUARTZ(new QuartzWire()),
-    REFINED(new RefinedWire());
+    QUARTZ(new QuartzWire());
 
     public static final Wires[] VALUES = values();
 

@@ -4,63 +4,64 @@
    * License:   Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
    *                http://creativecommons.org/licenses/by-nc-sa/4.0/
    *******************************************************************************************************************/
-package de.sanandrew.mods.immersivecables.block.ae2;
+package de.sanandrew.mods.immersivecables.block;
 
-import de.sanandrew.mods.immersivecables.block.BlockConnectable;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileConnectorQuartz;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileFluixConnectable;
+import de.sanandrew.mods.immersivecables.tileentity.TileFluixConnectable;
+import de.sanandrew.mods.immersivecables.tileentity.TileRelayFluix;
 import de.sanandrew.mods.immersivecables.util.ICConstants;
 import de.sanandrew.mods.immersivecables.util.ICCreativeTab;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public class BlockConnectorQuartz
+public class BlockRelayFluix
         extends BlockConnectable
 {
-    public BlockConnectorQuartz() {
+    public BlockRelayFluix() {
         super(Material.IRON);
         this.setHardness(2.5F);
         this.blockSoundType = SoundType.METAL;
-        this.setTranslationKey(ICConstants.ID + ":connector_quartz");
-        this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
-        this.setRegistryName(ICConstants.ID, "connector_quartz");
+        this.setTranslationKey(ICConstants.ID + ":relay_fluix");
+        this.setDefaultState(this.blockState.getBaseState().withProperty(FluixType.TYPE, FluixType.FLUIX).withProperty(FACING, EnumFacing.UP));
+        this.setRegistryName(ICConstants.ID, "relay_fluix");
         this.setCreativeTab(ICCreativeTab.INSTANCE);
+    }
+
+    @Override
+    public int damageDropped(IBlockState state) {
+        return state.getValue(FluixType.TYPE).ordinal();
     }
 
     @Override
     @SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(FACING, EnumFacing.VALUES[meta & 7]);
+        return this.getDefaultState().withProperty(FluixType.TYPE, FluixType.VALUES[meta & 1])
+                   .withProperty(FACING, EnumFacing.VALUES[(meta >> 1) & 7]);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return (state.getValue(FACING).getIndex() & 7);
+        return (state.getValue(FluixType.TYPE).ordinal() & 1) | ((state.getValue(FACING).getIndex() & 7) << 1);
     }
 
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileConnectorQuartz();
-    }
-
-    @Override
-    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
-        return layer == BlockRenderLayer.SOLID || layer == BlockRenderLayer.TRANSLUCENT;
+        return new TileRelayFluix();
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING);
+        return new BlockStateContainer(this, FluixType.TYPE, FACING);
     }
 
     @Override
@@ -75,6 +76,13 @@ public class BlockConnectorQuartz
             if( transformer instanceof TileFluixConnectable ) {
                 ((TileFluixConnectable) transformer).ownerCache = (EntityPlayer) placer;
             }
+        }
+    }
+
+    @Override
+    public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items) {
+        for( int i = 0; i < FluixType.VALUES.length; i++ ) {
+            items.add(new ItemStack(this, 1, i));
         }
     }
 }

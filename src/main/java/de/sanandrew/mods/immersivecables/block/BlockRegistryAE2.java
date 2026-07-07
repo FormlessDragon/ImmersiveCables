@@ -6,12 +6,12 @@
  * http://creativecommons.org/licenses/by-nc-sa/4.0/
  * *****************************************************************************************************************
  */
-package de.sanandrew.mods.immersivecables.block.ae2;
+package de.sanandrew.mods.immersivecables.block;
 
 import de.sanandrew.mods.immersivecables.item.ItemBlockMeta;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileConnectorQuartz;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileRelayFluix;
-import de.sanandrew.mods.immersivecables.tileentity.ae.TileTransformerFluix;
+import de.sanandrew.mods.immersivecables.tileentity.TileConnectorQuartz;
+import de.sanandrew.mods.immersivecables.tileentity.TileRelayFluix;
+import de.sanandrew.mods.immersivecables.tileentity.TileTransformerFluix;
 import de.sanandrew.mods.immersivecables.util.ICConstants;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;

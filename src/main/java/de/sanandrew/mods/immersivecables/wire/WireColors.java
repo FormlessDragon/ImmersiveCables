@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class WireColors
 {
@@ -29,21 +29,18 @@ public class WireColors
     public static int ae2DenseWireColor = 0x8C60AF;
     public static int ae2QuartzWireColor = 0xE8E2DB;
 
-    public static int rsWireColor = 0x77C6FF;
-
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     @SideOnly(Side.CLIENT)
     public static void initialize(IResourceManager mgr) {
         try( IResource res = mgr.getResource(RES_LOC) ) {
             try( InputStream stream = res.getInputStream() ) {
-                String json = IOUtils.toString(stream, Charset.forName("UTF-8"));
+                String json = IOUtils.toString(stream, StandardCharsets.UTF_8);
                 WireColorsJson wcj = GSON.fromJson(json, WireColorsJson.class);
 
                 ae2FluixWireColor = Integer.decode(wcj.ae2FluixWireColor);
                 ae2DenseWireColor = Integer.decode(wcj.ae2DenseWireColor);
                 ae2QuartzWireColor = Integer.decode(wcj.ae2QuartzWireColor);
-                rsWireColor = Integer.decode(wcj.rsWireColor);
             }
         } catch( IOException | NumberFormatException ex ) {
             ICConstants.LOG.log(Level.WARN, "Cannot load wire colors! Reverting to defaults.", ex);
@@ -51,7 +48,6 @@ public class WireColors
             ae2FluixWireColor = 0xD29BFF;
             ae2DenseWireColor = 0x8C60AF;
             ae2QuartzWireColor = 0xE8E2DB;
-            rsWireColor = 0x77C6FF;
         }
     }
 
@@ -59,7 +55,5 @@ public class WireColors
         public String ae2FluixWireColor;
         public String ae2DenseWireColor;
         public String ae2QuartzWireColor;
-
-        public String rsWireColor;
     }
 }
