@@ -10,5 +10,5 @@ dependencies {
     modCompileOnly("curse.maven:the-one-probe-245211:2667280")
     modImplementation("curse.maven:immersive-engineering-231951:2974106") // ie 0.12-98
     modImplementation("com.github.FormlessDragon:Applied-Energistics-2-Supergiant:v${ae2version}:dev")
-    modRuntimeOnly("mezz:jei:4.31.2")
+    modRuntimeOnly("mezz:jei:4.35.1")
 }
