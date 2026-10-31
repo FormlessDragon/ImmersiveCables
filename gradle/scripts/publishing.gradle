@@ -1,187 +1,96 @@
-import groovy.util.Node
-import groovy.xml.XmlSlurper
+import groovy.text.SimpleTemplateEngine
+import org.codehaus.groovy.runtime.MethodClosure
 
-apply from: 'gradle/scripts/helpers.gradle'
+ext.propertyString = this.&propertyString as MethodClosure
+ext.propertyBool = this.&propertyBool as MethodClosure
+ext.propertyStringList = this.&propertyStringList as MethodClosure
+ext.interpolate = this.&interpolate as MethodClosure
+ext.assertProperty = this.&assertProperty as MethodClosure
+ext.assertSubProperties = this.&assertSubProperties as MethodClosure
+ext.setDefaultProperty = this.&setDefaultProperty as MethodClosure
+ext.assertEnvironmentVariable = this.&assertEnvironmentVariable as MethodClosure
 
-private static boolean isPomNodeNamed(Object node, String localName) {
-    if (!(node instanceof Node)) {
-        return false
-    }
-
-    def nodeName = node.name().toString()
-    return nodeName == localName
-            || nodeName.endsWith("}" + localName)
-            || nodeName.endsWith(":" + localName)
+String propertyString(String key) {
+    return $property(key).toString()
 }
 
-private static void removePomChildren(Node pomNode, String localName) {
-    pomNode.children().removeAll { child ->
-        isPomNodeNamed(child, localName)
-    }
+boolean propertyBool(String key) {
+    return propertyString(key).toBoolean()
 }
 
-setDefaultProperty('publish_to_maven', true, false)
-setDefaultProperty('publish_to_jitpack', false, false)
-setDefaultProperty('maven_group', false, propertyString('root_package'))
-setDefaultProperty('maven_artifact_id', false, propertyString('mod_id'))
-setDefaultProperty('maven_developer_id', false, '')
-setDefaultProperty('maven_developer_name', false, '')
-setDefaultProperty('maven_license_name', false, propertyString('mod_license'))
-setDefaultProperty('maven_license_url', false, '')
-setDefaultProperty('maven_scm_url', false, propertyString('mod_url'))
-setDefaultProperty('jitpack_group', false, '')
-setDefaultProperty('jitpack_artifact_id', false, '')
-setDefaultProperty('jitpack_version', false, '')
+Collection<String> propertyStringList(String key) {
+    return propertyStringList(key, ' ')
+}
 
-def publishMainJarTask = propertyBool('enable_shadow') ? 'remapShadowJar' : 'remapJar'
+Collection<String> propertyStringList(String key, String delimit) {
+    return propertyString(key).split(delimit).findAll { !it.isBlank() }
+}
 
-def configureMavenJavaPublication = { MavenPublication publication, String groupId, String artifactId, String publicationVersion ->
-    def scmUrl = propertyString('maven_scm_url')
-    def scmConnectionUrl = scmUrl.endsWith('.git') ? scmUrl : "${scmUrl}.git"
-
-    publication.from components.java
-    publication.artifact(tasks.named(publishMainJarTask)) {
-        classifier = null
+private Object $property(String key) {
+    def value = project.findProperty(key)
+    if (value instanceof String) {
+        return interpolate(value)
     }
-    publication.setGroupId(groupId)
-    publication.setArtifactId(artifactId)
-    publication.setVersion(publicationVersion)
+    return value
+}
 
-    publication.pom {
-        name = propertyString('mod_name')
-        description = propertyString('mod_description')
-        url = propertyString('mod_url')
-        licenses {
-            license {
-                name = propertyString('maven_license_name')
-                url = propertyString('maven_license_url')
-            }
-        }
-        developers {
-            developer {
-                id = propertyString('maven_developer_id')
-                name = propertyString('maven_developer_name')
-            }
-        }
-        scm {
-            url = scmUrl
-            connection = "scm:git:${scmConnectionUrl}"
-            developerConnection = "scm:git:${scmConnectionUrl}"
-        }
+String interpolate(String value) {
+    if (value.startsWith('${{') && value.endsWith('}}')) {
+        value = value.substring(3, value.length() - 2)
+        Binding newBinding = new Binding(this.binding.getVariables())
+        newBinding.setProperty('it', this)
+        return new GroovyShell(this.getClass().getClassLoader(), newBinding).evaluate(value)
     }
-    publication.pom.withXml {
-        Node pomNode = it.asNode()
-        removePomChildren(pomNode, 'dependencies')
+    if (value.contains('${')) {
+        return new SimpleTemplateEngine().createTemplate(value).make(project.properties).toString()
+    }
+    return value
+}
+
+void assertProperty(String propertyName) {
+    def property = property(propertyName)
+    if (property == null) {
+        throw new GradleException("Property ${propertyName} is not defined!")
+    }
+    if (property.isEmpty()) {
+        throw new GradleException("Property ${propertyName} is empty!")
     }
 }
 
-tasks.withType(GenerateModuleMetadata).configureEach {
-    enabled = false
-}
-
-if (propertyBool('publish_to_maven')) {
-    assertProperty('maven_name')
-    assertProperty('maven_url')
-    assertProperty('maven_group')
-    assertProperty('maven_artifact_id')
-    assertProperty('maven_developer_id')
-    assertProperty('maven_developer_name')
-    assertProperty('maven_license_name')
-    assertProperty('maven_license_url')
-    assertProperty('maven_scm_url')
-
-    publishing {
-        repositories {
-            maven {
-                name propertyString('maven_name').replaceAll("\\s", "")
-                url propertyString('maven_url')
-                credentials(PasswordCredentials)
-            }
+void assertSubProperties(String propertyName, String... subPropertyNames) {
+    assertProperty(propertyName)
+    if (propertyBool(propertyName)) {
+        for (String subPropertyName : subPropertyNames) {
+            assertProperty(subPropertyName)
         }
-        publications {
-            mavenJava(MavenPublication) {
-                configureMavenJavaPublication(it, propertyString('maven_group'), propertyString('maven_artifact_id'), project.version.toString())
-            }
-        }
-    }
-
-    def verifyMavenPomHasNoDependencies = tasks.register('verifyMavenPomHasNoDependencies') {
-        def generatedPom = layout.buildDirectory.file('publications/mavenJava/pom-default.xml')
-
-        dependsOn tasks.named('generatePomFileForMavenJavaPublication')
-        inputs.file(generatedPom)
-
-        doLast {
-            def pomFile = generatedPom.get().asFile
-            def pom = new XmlSlurper(false, false).parse(pomFile)
-            def dependenciesNode = pom.dependencies
-            if (dependenciesNode.size() > 0) {
-                def dependencies = dependenciesNode.dependency
-                def dependencyNames = dependencies.collect { dependency ->
-                    "${dependency.groupId.text()}:${dependency.artifactId.text()}:${dependency.version.text()}"
-                }.join(', ')
-                if (dependencyNames.isEmpty()) {
-                    throw new GradleException('Maven publication POM must not contain a dependencies section.')
-                }
-                throw new GradleException("Maven publication POM must not contain a dependencies section, but found: ${dependencyNames}")
-            }
-        }
-    }
-
-    tasks.matching { task ->
-        task.name == 'publishMavenJavaPublicationToMavenLocal'
-                || task.name.startsWith('publishMavenJavaPublicationTo')
-    }.configureEach {
-        dependsOn verifyMavenPomHasNoDependencies
     }
 }
 
-if (propertyBool('publish_to_jitpack')) {
-    assertProperty('jitpack_group')
-    assertProperty('jitpack_artifact_id')
-    assertProperty('jitpack_version')
-    assertProperty('maven_scm_url')
-
-    publishing {
-        repositories {
-            maven {
-                name = 'jitpack'
-                url = layout.buildDirectory.dir('jitpack-repository')
-            }
+void setDefaultProperty(String propertyName, boolean warn, defaultValue) {
+    def property = property(propertyName)
+    def exists = true
+    if (property == null) {
+        exists = false
+        if (warn) {
+            project.logger.log(LogLevel.WARN, "Property ${propertyName} is not defined!")
         }
-        publications {
-            mavenJava(MavenPublication) {
-                configureMavenJavaPublication(it, propertyString('jitpack_group'), propertyString('jitpack_artifact_id'), propertyString('jitpack_version'))
-            }
+    } else if (property.isEmpty()) {
+        exists = false
+        if (warn) {
+            project.logger.log(LogLevel.WARN, "Property ${propertyName} is empty!")
         }
     }
-
-    def verifyJitpackMavenPomHasNoDependencies = tasks.register('verifyJitpackMavenPomHasNoDependencies') {
-        def generatedPom = layout.buildDirectory.file('publications/mavenJava/pom-default.xml')
-
-        dependsOn tasks.named('generatePomFileForMavenJavaPublication')
-        inputs.file(generatedPom)
-
-        doLast {
-            def pomFile = generatedPom.get().asFile
-            def pom = new XmlSlurper(false, false).parse(pomFile)
-            def dependenciesNode = pom.dependencies
-            if (dependenciesNode.size() > 0) {
-                def dependencies = dependenciesNode.dependency
-                def dependencyNames = dependencies.collect { dependency ->
-                    "${dependency.groupId.text()}:${dependency.artifactId.text()}:${dependency.version.text()}"
-                }.join(', ')
-                if (dependencyNames.isEmpty()) {
-                    throw new GradleException('JitPack Maven publication POM must not contain a dependencies section.')
-                }
-                throw new GradleException("JitPack Maven publication POM must not contain a dependencies section, but found: ${dependencyNames}")
-            }
-        }
+    if (!exists) {
+        project.setProperty(propertyName, defaultValue.toString())
     }
+}
 
-    tasks.matching { task ->
-        task.name == 'publishMavenJavaPublicationToJitpackRepository'
-    }.configureEach {
-        dependsOn verifyJitpackMavenPomHasNoDependencies
+void assertEnvironmentVariable(String propertyName) {
+    def property = System.getenv(propertyName)
+    if (property == null) {
+        throw new GradleException("System Environment Variable $propertyName is not defined!")
+    }
+    if (property.isEmpty()) {
+        throw new GradleException("Property $propertyName is empty!")
     }
 }

@@ -1,14 +1,76 @@
 apply from: 'gradle/scripts/helpers.gradle'
 
-dependencies {
-    compileOnly "com.cleanroommc:sponge-mixin:0.20.12+mixin.0.8.7"
-    if (propertyBool('enable_lwjglx')) {
-        compileOnly "com.cleanroommc:lwjglx:1.0.0"
+repositories {
+    flatDir {
+        dirs('libs') // /libs
     }
+    maven {
+        name = 'CleanroomMC'
+        url = 'https://maven.cleanroommc.com'
+        content {
+            includeGroup 'mezz'
+        }
+    }
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
+        name = 'CleanroomCurseMaven'
+        url = 'https://curse.cleanroommc.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    maven {
+        name = "jitpack"
+        url = 'https://jitpack.io'
+        content {
+            includeGroupByRegex 'com\\.github\\..*'
+        }
+    }
+    maven {
+        name = "CoFH Maven"
+        url = "https://maven.covers1624.net"
+        content {
+            includeGroup 'cofh'
+        }
+    }
+    mavenCentral()
+    mavenLocal() // Must be last for caching to work
+}
 
-    modCompileOnly("cofh:RedstoneFlux:1.12-2.0.1.2:universal")
+dependencies {
+    implementation "com.cleanroommc:cleanmix:0.7.4"
+
+    modCompileOnly("curse.maven:redstone-flux-270789:2920436")
     modCompileOnly("curse.maven:the-one-probe-245211:2667280")
     modImplementation("curse.maven:immersive-engineering-231951:2974106") // ie 0.12-98
     modImplementation("com.github.FormlessDragon:Applied-Energistics-2-Supergiant:v${ae2version}:dev")
     modRuntimeOnly("mezz:jei:4.35.1")
+}
+
+if (propertyBool('enable_shadow')) {
+    tasks.named("shadowJar").configure {
+        // Exclude specific parts of deps to keep your jar clean
+        // dependencies {
+        //     exclude 'META-INF/maven/**'
+        // }
+
+        // Relocate specific parts of deps, so multiple shaded classes in mods will not conflict
+        // relocate "mezz.jei", "shaded.mezz.jei"
+
+        // Remove unused classes automatically. May cause issues if they are accessed by reflection
+        // minimize()
+    }
 }
