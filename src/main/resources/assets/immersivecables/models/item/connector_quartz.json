@@ -1,5 +1,4 @@
 {
-  "parent": "block/cube_all",
   "__comment": "Model generated using MrCrayfish's Model Creator (http://mrcrayfish.com/modelcreator/)",
   "display": {
     "firstperson_righthand": {
@@ -31,7 +30,8 @@
     }
   },
   "textures": {
-    "0": "immersivecables:blocks/connector_quartz"
+    "0": "immersivecables:blocks/connector_quartz",
+    "particle": "immersivecables:blocks/connector_quartz"
   },
   "elements": [
     {

@@ -10,6 +10,7 @@ import ae2.api.networking.GridFlags;
 import ae2.api.networking.IGrid;
 import ae2.api.networking.IGridNode;
 import ae2.api.networking.IManagedGridNode;
+import ae2.api.networking.energy.IEnergyService;
 import ae2.api.util.AECableType;
 import ae2.me.energy.IEnergyOverlayGridConnection;
 import ae2.me.service.EnergyService;
@@ -164,21 +165,24 @@ public class TileConnectorQuartz
     }
 
     private Collection<EnergyService> getMainEnergyServices() {
-        IGrid grid = this.getMainNode().getGrid();
-        if( grid == null ) {
-            return Collections.emptyList();
-        }
-
-        return Collections.singletonList((EnergyService) grid.getEnergyService());
+        return getEnergyServices(this.getMainNode().getGrid());
     }
 
     private Collection<EnergyService> getOuterEnergyServices() {
-        IGrid grid = this.outerNode.getGrid();
+        return getEnergyServices(this.outerNode.getGrid());
+    }
+
+    private static Collection<EnergyService> getEnergyServices(IGrid grid) {
         if( grid == null ) {
             return Collections.emptyList();
         }
 
-        return Collections.singletonList((EnergyService) grid.getEnergyService());
+        IEnergyService energyService = grid.getEnergyService();
+        if( !(energyService instanceof EnergyService) ) {
+            return Collections.emptyList();
+        }
+
+        return Collections.singletonList((EnergyService) energyService);
     }
 
     @Override

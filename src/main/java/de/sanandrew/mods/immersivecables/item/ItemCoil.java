@@ -78,6 +78,7 @@ public class ItemCoil
         }
     }
 
+    @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand) {
         TileEntity tile = world.getTileEntity(pos);
         ItemStack stack = player.getHeldItem(hand);
@@ -97,7 +98,10 @@ public class ItemCoil
                 } else {
                     if( !world.isRemote ) {
                         if( !ItemNBTHelper.hasKey(stack, "linkingPos") ) {
-                            ItemNBTHelper.setIntArray(stack, "linkingPos", new int[] {world.provider.getDimension(), masterPos.getX(), masterPos.getY(), masterPos.getZ()});
+                            Vec3i linkOffset = pos.subtract(masterPos);
+                            ItemNBTHelper.setIntArray(stack, "linkingPos", new int[] {world.provider.getDimension(), masterPos.getX(), masterPos.getY(),
+                                                                                       masterPos.getZ(), linkOffset.getX(), linkOffset.getY(),
+                                                                                       linkOffset.getZ()});
                             NBTTagCompound targetNbt = new NBTTagCompound();
                             target.writeToNBT(targetNbt);
                             ItemNBTHelper.setTagCompound(stack, "targettingInfo", targetNbt);
@@ -142,9 +146,9 @@ public class ItemCoil
                                         ImmersiveNetHandler.Connection tmpConn = new ImmersiveNetHandler.Connection(Utils.toCC(nodeHere), Utils.toCC(nodeLink), wire,
                                                                                                                     (int) Math.sqrt(distanceSq));
                                         Vec3d start = nodeHere.getConnectionOffset(tmpConn, target, pos.subtract(masterPos));
-                    Vec3d end = nodeLink.getConnectionOffset(tmpConn, targetLink, offsetLink).add(linkPos.getX()-masterPos.getX(),
-                                            linkPos.getY()-masterPos.getY(),
-                                            linkPos.getZ()-masterPos.getZ());
+                                        Vec3d end = nodeLink.getConnectionOffset(tmpConn, targetLink, offsetLink).add(linkPos.getX()-masterPos.getX(),
+                                                                                                                    linkPos.getY()-masterPos.getY(),
+                                                                                                                    linkPos.getZ()-masterPos.getZ());
                                         boolean canSee = ApiUtils.raytraceAlongCatenaryRelative(tmpConn, (p) -> {
                                             if (ignore.contains(p.getLeft())) {
                                                 return false;

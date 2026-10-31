@@ -93,6 +93,10 @@ public class TileRelayFluix
     }
 
     private FluixType getType() {
-        return this.world.isAirBlock(this.pos) ? FluixType.FLUIX : this.world.getBlockState(this.pos).getValue(FluixType.TYPE);
+        if( this.world == null || this.world.isAirBlock(this.pos) ) {
+            return FluixType.FLUIX;
+        }
+
+        return this.world.getBlockState(this.pos).getValue(FluixType.TYPE);
     }
 }

@@ -43,6 +43,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -197,6 +198,11 @@ public abstract class TileFluixConnectable
         this.loaded = false;
     }
 
+    public void rebuildNetworkNodes() {
+        this.cachedSelectionBounds = null;
+        this.resetManagedNodes();
+    }
+
     protected void saveManagedNodes(NBTTagCompound compound) {
         this.saveManagedNode(compound, this.mainNode, MAIN_NODE_TAG);
     }
@@ -249,10 +255,11 @@ public abstract class TileFluixConnectable
             return;
         }
 
+        Set<IGridConnection> nodeConnections = new HashSet<>(node.getConnections());
         for( Map.Entry<BlockPos, IGridConnection> entry : this.connections.entrySet() ) {
             BlockPos opposite = entry.getKey();
             IGridConnection conn = entry.getValue();
-            if( !node.getConnections().contains(conn) ) {
+            if( !nodeConnections.contains(conn) ) {
                 this.connections.remove(opposite, conn);
             } else if( !ImmersiveCables.isChunkLoaded(this.world.getChunkProvider(), opposite.getX() >> 4, opposite.getZ() >> 4) ) {
                 this.destroyTrackedConnection(conn);
@@ -394,7 +401,7 @@ public abstract class TileFluixConnectable
 
     @Override
     public float[] getBlockBounds() {
-        return null;
+        return new float[] {0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F};
     }
 
     private static final class FluixGridNodeListener

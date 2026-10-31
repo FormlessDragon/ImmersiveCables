@@ -20,7 +20,6 @@ public class ICConfiguration
 
     public static final String CAT_AE2 = "Applied Energistics 2";
 
-    public static boolean ae2Enabled = true;
     public static float ae2FluixRelayPowerDrain = 2.0F;
     public static float ae2DenseRelayPowerDrain = 3.0F;
     public static float ae2FluixTransformerPowerDrain = 8.0F;
@@ -39,10 +38,6 @@ public class ICConfiguration
         String desc;
 
         {
-            desc = "Enables or disables the Applied Energistics 2 features. Will be ignored if AE2 is not available.";
-            ae2Enabled = config.getBoolean("enabled", CAT_AE2, ae2Enabled, desc);
-            config.getCategory(CAT_AE2).get("enabled").setRequiresMcRestart(true);
-
             desc = "The power drained from the AE system by a regular fluix relay.";
             ae2FluixRelayPowerDrain = config.getFloat("fluixRelayPowerDrain", CAT_AE2, ae2FluixRelayPowerDrain, 0.0F, Float.MAX_VALUE, desc);
 
@@ -55,11 +50,17 @@ public class ICConfiguration
             desc = "The power drained from the AE system by a dense fluix transformer.";
             ae2DenseTransformerPowerDrain = config.getFloat("denseTransformerPowerDrain", CAT_AE2, ae2DenseTransformerPowerDrain, 0.0F, Float.MAX_VALUE, desc);
 
+            desc = "The power drained from the AE system by a quartz fiber connector.";
+            ae2QuartzConnectorPowerDrain = config.getFloat("quartzConnectorPowerDrain", CAT_AE2, ae2QuartzConnectorPowerDrain, 0.0F, Float.MAX_VALUE, desc);
+
             desc = "The maximum length in blocks a regular fluix wire can be.";
             ae2FluixWireMaxLength = config.getInt("fluixWireMaxLength", CAT_AE2, ae2FluixWireMaxLength, 0, Integer.MAX_VALUE, desc);
 
             desc = "The maximum length in blocks a dense fluix wire can be.";
             ae2DenseWireMaxLength = config.getInt("denseWireMaxLength", CAT_AE2, ae2DenseWireMaxLength, 0, Integer.MAX_VALUE, desc);
+
+            desc = "The maximum length in blocks a quartz fiber wire can be.";
+            ae2QuartzWireMaxLength = config.getInt("quartzWireMaxLength", CAT_AE2, ae2QuartzWireMaxLength, 0, Integer.MAX_VALUE, desc);
         }
 
         if( config.hasChanged() ) {

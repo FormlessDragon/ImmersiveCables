@@ -87,11 +87,7 @@ public class TileTransformerFluix
     @Nullable
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {
-        NBTTagCompound nbt = new NBTTagCompound();
-        this.writeToNBT(nbt);
-        this.writeCustomNBT(nbt, true);
-        nbt.setBoolean("meActive", this.getMainNode().isActive());
-        return new SPacketUpdateTileEntity(this.pos, 1, nbt);
+        return new SPacketUpdateTileEntity(this.pos, 1, this.getUpdateTag());
     }
 
     @Override
@@ -108,7 +104,11 @@ public class TileTransformerFluix
     }
 
     private FluixType getType() {
-        return this.world.isAirBlock(this.pos) ? FluixType.FLUIX : this.world.getBlockState(this.pos).getValue(FluixType.TYPE);
+        if( this.world == null || this.world.isAirBlock(this.pos) ) {
+            return FluixType.FLUIX;
+        }
+
+        return this.world.getBlockState(this.pos).getValue(FluixType.TYPE);
     }
 
     @Override

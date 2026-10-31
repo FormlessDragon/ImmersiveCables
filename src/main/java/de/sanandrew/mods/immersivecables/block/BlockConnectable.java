@@ -11,6 +11,7 @@ import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler;
 import blusunrize.immersiveengineering.common.IESaveData;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces;
 import blusunrize.immersiveengineering.common.util.Utils;
+import de.sanandrew.mods.immersivecables.tileentity.TileFluixConnectable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.material.Material;
@@ -116,7 +117,9 @@ public abstract class BlockConnectable
             if( tile != null ) {
                 ImmersiveNetHandler.INSTANCE.clearAllConnectionsFor(Utils.toCC(tile), world, new TargetingInfo(EnumFacing.UP, 0.0F, 0.0F, 0.0F));
                 IESaveData.setDirty(world.provider.getDimension());
-                tile.invalidate();
+                if( tile instanceof TileFluixConnectable connectable ) {
+                    connectable.rebuildNetworkNodes();
+                }
             }
 
             return super.rotateBlock(world, pos, axis);
@@ -154,11 +157,17 @@ public abstract class BlockConnectable
         TileEntity tile = world.getTileEntity(pos);
         if( tile instanceof IEBlockInterfaces.IAdvancedSelectionBounds ) {
             RayTraceResult closestRT = null;
+            double closestDistance = Double.MAX_VALUE;
             for( AxisAlignedBB aabb : ((IEBlockInterfaces.IAdvancedSelectionBounds) tile).getAdvancedSelectionBounds() ) {
                 RayTraceResult rt = rayTrace(pos, start, end, aabb.offset(-pos.getX(), -pos.getY(), -pos.getZ()));
-                double distance = closestRT == null || rt == null ? 0.0D : closestRT.hitVec.lengthSquared() - rt.hitVec.lengthSquared();
-                if( rt != null && (closestRT == null || (start.lengthSquared() > end.lengthSquared() ? -1.0 : 1.0) * distance > 0.0) ) {
+                if( rt == null ) {
+                    continue;
+                }
+
+                double distance = start.squareDistanceTo(rt.hitVec);
+                if( distance < closestDistance ) {
                     closestRT = rt;
+                    closestDistance = distance;
                 }
             }
 

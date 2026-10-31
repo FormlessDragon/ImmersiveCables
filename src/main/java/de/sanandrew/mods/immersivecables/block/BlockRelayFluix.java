@@ -46,7 +46,7 @@ public class BlockRelayFluix
     @SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta) {
         return this.getDefaultState().withProperty(FluixType.TYPE, FluixType.VALUES[meta & 1])
-                   .withProperty(FACING, EnumFacing.VALUES[(meta >> 1) & 7]);
+                   .withProperty(FACING, EnumFacing.VALUES[((meta >> 1) & 7) % EnumFacing.VALUES.length]);
     }
 
     @Override

@@ -39,7 +39,7 @@ public class BlockConnectorQuartz
     @Override
     @SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(FACING, EnumFacing.VALUES[meta & 7]);
+        return this.getDefaultState().withProperty(FACING, EnumFacing.VALUES[(meta & 7) % EnumFacing.VALUES.length]);
     }
 
     @Override

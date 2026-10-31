@@ -32,10 +32,10 @@ public class RenderTileIWConnectable
     public void renderTileEntityFast(TileEntityImmersiveConnectable te, double x, double y, double z, float partialTicks, int destroyStage, float partial, BufferBuilder buffer) {
         Set<ImmersiveNetHandler.Connection> outputs = ImmersiveNetHandler.INSTANCE.getConnections(te.getWorld(), Utils.toCC(te));
         if( outputs != null ) {
-            Vec3d tilePosVec = new Vec3d(x, y, z);
             for( ImmersiveNetHandler.Connection con : outputs ) {
                 TileEntity tileEnd = te.getWorld().getTileEntity(con.end);
                 if( tileEnd instanceof IImmersiveConnectable ) {
+                    Vec3d tilePosVec = new Vec3d(x, y, z);
                     if( te.getPos().toLong() > tileEnd.getPos().toLong() ) {
                         tilePosVec = tilePosVec.add(0.001D, 0.001D, 0.001D);
                     }
@@ -140,8 +140,8 @@ public class RenderTileIWConnectable
     }
 
     private static BufferBuilder setLightmap(BufferBuilder buffer, Vec3d pos) {
-        BlockPos bPos = new BlockPos(pos);
-        int bright = Minecraft.getMinecraft().world.getCombinedLight(bPos, 0);
+        World world = Minecraft.getMinecraft().world;
+        int bright = world == null ? 0 : world.getCombinedLight(new BlockPos(pos), 0);
         int bX = bright >> 16 & 0xFFFF;
         int bY = bright & 0xFFFF;
 
